@@ -63,11 +63,10 @@
   const editor = document.querySelector("slim-energy-card-editor");
   const show = (c) => (document.getElementById("yaml").textContent = JSON.stringify(c, null, 1));
   const config = {
-    price_entity: "sensor.price",
     entities: [
       { entity: "sensor.solar", type: "solar", daily_entity: "sensor.solar_day" },
       { entity: "sensor.bat", type: "battery", soc_entity: "sensor.soc" },
-      { entity: "sensor.grid", type: "grid", daily_entity: "sensor.grid_day" },
+      { entity: "sensor.grid", type: "grid", price_entity: "sensor.price", daily_entity: "sensor.grid_day" },
       { entity: "sensor.house", type: "home", name: "House", daily_entity: "sensor.house_day" },
       { entity: "sensor.heat", type: "heatpump", daily_entity: "sensor.heat_day" },
       { entity: "sensor.car", type: "ev", enabled: false },

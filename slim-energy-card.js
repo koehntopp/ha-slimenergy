@@ -84,8 +84,9 @@ class SlimEnergyCard extends HTMLElement {
       const [d, ds] = this._num(c.daily_entity);
       if (!isNaN(d)) parts.push(ds.attributes.unit_of_measurement === "Wh" ? `${(d / 1000).toFixed(1)} kWh` : `${d.toFixed(1)} ${ds.attributes.unit_of_measurement || ""}`.trim());
     }
-    if (c.type === "grid" && this._config.price_entity) {
-      const [p, ps] = this._num(this._config.price_entity);
+    const price = c.price_entity || this._config.price_entity; // card-level kept for old configs
+    if (c.type === "grid" && price) {
+      const [p, ps] = this._num(price);
       if (!isNaN(p)) parts.push(`${p.toFixed(2)} ${ps.attributes.unit_of_measurement || ""}`.trim());
     }
     const extra = parts.length ? `(${parts.join(" · ")})` : "";
@@ -116,7 +117,7 @@ const TYPE_OPTIONS = Object.entries(TYPES).map(([value, t]) => ({ value, label: 
 const LABELS = {
   enabled: "Show", type: "Type", name: "Name", entity: "Power entity", icon: "Icon",
   soc_entity: "Battery SoC entity", daily_entity: "Daily energy entity",
-  positive_color: "Border colour when value > 0", invert: "Invert sign", price_entity: "Grid price entity",
+  positive_color: "Border colour when value > 0", invert: "Invert sign", price_entity: "Price entity",
 };
 const bool = { boolean: {} };
 // fields depend on the device type: SoC only for batteries
@@ -127,11 +128,12 @@ const schemaFor = (type) => [
   { name: "entity", selector: ent() },
   { name: "icon", selector: { icon: {} } },
   ...(type === "battery" ? [{ name: "soc_entity", selector: ent({ device_class: "battery" }) }] : []),
+  ...(type === "grid" ? [{ name: "price_entity", selector: ent() }] : []),
   { name: "daily_entity", selector: ent({ device_class: "energy" }) },
   { name: "positive_color", selector: sel([{ value: "green", label: "Green" }, { value: "red", label: "Red" }]) },
   { name: "invert", selector: bool },
 ];
-const MANAGED = ["enabled", "type", "name", "entity", "icon", "soc_entity", "daily_entity", "positive_color", "invert"];
+const MANAGED = ["enabled", "type", "name", "entity", "icon", "soc_entity", "price_entity", "daily_entity", "positive_color", "invert"];
 
 class SlimEnergyCardEditor extends HTMLElement {
   _nk = 0;
@@ -197,13 +199,6 @@ class SlimEnergyCardEditor extends HTMLElement {
       .btn { cursor: pointer; --mdc-icon-size: 20px; }
       .add { display: inline-block; cursor: pointer; color: var(--primary-color); padding: 8px 0; }
     </style>`;
-    if (c.entities.some((e) => e.type === "grid")) {
-      this.appendChild(this._form([{ name: "price_entity", selector: ent() }], { price_entity: c.price_entity }, (v) => {
-        const extra = { price_entity: v.price_entity };
-        if (!v.price_entity) delete this._config.price_entity;
-        this._emit(c.entities, v.price_entity ? extra : {});
-      }));
-    }
     c.entities.forEach((e, i) => {
       const key = this._keys[i];
       const d = document.createElement("details");
@@ -241,7 +236,7 @@ class SlimEnergyCardEditor extends HTMLElement {
         const n = {};
         const kept = { ...e };
         MANAGED.forEach((k) => delete kept[k]);
-        for (const k of ["name", "icon", "entity", "daily_entity", ...(v.type === "battery" ? ["soc_entity"] : [])]) if (v[k] || k === "entity") n[k] = v[k] || "";
+        for (const k of ["name", "icon", "entity", "daily_entity", ...(v.type === "battery" ? ["soc_entity"] : []), ...(v.type === "grid" ? ["price_entity"] : [])]) if (v[k] || k === "entity") n[k] = v[k] || "";
         if (v.type && v.type !== "other") n.type = v.type;
         // a colour that was just the old type's default follows the new type
         const dflt = v.type !== type && v.positive_color === TYPES[type].color ? TYPES[v.type].color : v.positive_color;

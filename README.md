@@ -14,7 +14,6 @@ Use the visual editor (drag to reorder, copy, remove, `Show` switch per device; 
 
 ```yaml
 type: custom:slim-energy-card
-price_entity: sensor.grid_price        # shown on type: grid
 entities:
   - type: solar                        # solar|battery|grid|home|heatpump|ev|other
     entity: sensor.solar_power
@@ -23,7 +22,8 @@ entities:
     entity: sensor.battery_power
     soc_entity: sensor.battery_soc     # shows (52%)
   - type: grid
-    entity: sensor.grid_power          # bracket: (4.2 kWh · 0.28 €/kWh)
+    entity: sensor.grid_power
+    price_entity: sensor.grid_price    # grid only; bracket: (4.2 kWh · 0.28 €/kWh)
     daily_entity: sensor.grid_import_today
   - type: home
     entity: sensor.house_power
@@ -32,5 +32,5 @@ entities:
     enabled: false                     # hide
 ```
 
-Per-entity options: `type` (default `other`), `entity`, `name`, `icon`, `soc_entity` (battery only), `daily_entity`, `positive_color` (`green`|`red`, default per type: green for solar/home/other, red for battery/grid/heatpump/ev; colour used when value > 0), `invert`, `enabled` (true), `decimals` (2), `threshold` (0.005 kW, below = neutral border).
+Per-entity options: `type` (default `other`), `entity`, `name`, `icon`, `soc_entity` (battery only), `price_entity` (grid only), `daily_entity`, `positive_color` (`green`|`red`, default per type: green for solar/home/other, red for battery/grid/heatpump/ev; colour used when value > 0), `invert`, `enabled` (true), `decimals` (2), `threshold` (0.005 kW, below = neutral border).
 W values are shown as kW. Border colours: CSS vars `--slim-green`, `--slim-red`. Tap = more-info.

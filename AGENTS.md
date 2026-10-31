@@ -12,17 +12,17 @@ HACS Lovelace card (`custom:slim-energy-card`). Goal: very simple, slim energy o
 - Fields in a 3-column grid; one field per entry in `entities`, so 6 entities = 2 rows. Pill: border, icon, value, optional bracket text.
 - Value shown as absolute kW (W converted to kW); other units shown as-is. Missing/non-numeric state shows `n/a`.
 - Border colour from sign: value > 0 uses `positive_color` (`green` default, or `red`), value < 0 the opposite. `invert: true` flips the sign first. `abs(kW) <= threshold` (default 0.005) = neutral border.
-- Bracket text, parts joined with ` · `, in order: battery SoC (`soc_entity`, `52%`), daily energy (`daily_entity`, kWh, Wh converted, 1 decimal), grid price (only `type: grid`, from card-level `price_entity`, 2 decimals + its unit).
+- Bracket text, parts joined with ` · `, in order: battery SoC (`soc_entity`, `52%`), daily energy (`daily_entity`, kWh, Wh converted, 1 decimal), grid price (only `type: grid`, from its `price_entity`, 2 decimals + its unit).
   - Solar: `daily_entity` = daily production. Grid: `daily_entity` = daily use, e.g. `(4.2 kWh · 0.28 €/kWh)`.
 - Icon per entity: `mdi:...` (rendered via `ha-icon`) or an emoji.
 - Tap on a field fires `hass-more-info` for its entity.
 - Border colours overridable via CSS vars `--slim-green`, `--slim-red`.
 
-- Visual editor (`slim-energy-card-editor`, same file, via `getConfigElement`): sortable list like HA power-flow cards. Row = drag handle, icon, name, entity id, warning if no entity, copy, remove; expands to an `ha-form` whose schema depends on `type` (`schemaFor`: SoC only for battery; price entity shown on top only if a grid device exists). Native HTML5 drag (draggable set on handle mousedown). Types (`TYPES`) give default icon, label and `positive_color`; stored config omits values equal to the default. Editor skips re-render when the config echoed back is unchanged (keeps input focus); type change re-renders. Icon selector is mdi-only; emoji icons still work via YAML.
+- Visual editor (`slim-energy-card-editor`, same file, via `getConfigElement`): sortable list like HA power-flow cards. Row = drag handle, icon, name, entity id, warning if no entity, copy, remove; expands to an `ha-form` whose schema depends on `type` (`schemaFor`: SoC only for battery; price entity only for grid). Native HTML5 drag (draggable set on handle mousedown). Types (`TYPES`) give default icon, label and `positive_color`; stored config omits values equal to the default. Editor skips re-render when the config echoed back is unchanged (keeps input focus); type change re-renders. Icon selector is mdi-only; emoji icons still work via YAML.
 
 ## Config
-Card: `entities` (required), `price_entity`.
-Entity: `type` (solar|battery|grid|home|heatpump|ev|other), `name` (tooltip/editor label), `enabled` (false = hidden), `entity`, `icon`, `soc_entity`, `daily_entity`, `positive_color`, `invert`, `decimals` (2), `threshold` (0.005).
+Card: `entities` (required). Legacy card-level `price_entity` still read as fallback.
+Entity: `type` (solar|battery|grid|home|heatpump|ev|other), `name` (tooltip/editor label), `enabled` (false = hidden), `entity`, `icon`, `soc_entity` (battery), `price_entity` (grid), `daily_entity`, `positive_color`, `invert`, `decimals` (2), `threshold` (0.005).
 
 ## Not included (add only on request)
 Status words ("Producing", "Using"), visual editor, translations, per-field click actions, auto sizing to content.
