@@ -18,11 +18,11 @@ HACS Lovelace card (`custom:slim-energy-card`). Goal: very simple, slim energy o
 - Tap on a field fires `hass-more-info` for its entity.
 - Border colours overridable via CSS vars `--slim-green`, `--slim-red`.
 
-- Visual editor (`slim-energy-card-editor`, same file, via `getConfigElement`): `ha-form` for `price_entity` and one collapsible form per field (all entity options, plus a `Show` switch = `enabled`), Remove, Add field. Disabled fields (`enabled: false`) or fields without `entity` are not rendered and don't take a grid slot. Editor skips re-render when the config echoed back is unchanged (keeps input focus). Icon selector is mdi-only; emoji icons still work via YAML.
+- Visual editor (`slim-energy-card-editor`, same file, via `getConfigElement`): sortable list like HA power-flow cards. Row = drag handle, icon, name, entity id, warning if no entity, copy, remove; expands to an `ha-form` whose schema depends on `type` (`schemaFor`: SoC only for battery; price entity shown on top only if a grid device exists). Native HTML5 drag (draggable set on handle mousedown). Types (`TYPES`) give default icon, label and `positive_color`; stored config omits values equal to the default. Editor skips re-render when the config echoed back is unchanged (keeps input focus); type change re-renders. Icon selector is mdi-only; emoji icons still work via YAML.
 
 ## Config
 Card: `entities` (required), `price_entity`.
-Entity: `enabled` (false = hidden), `entity`, `icon`, `type` (`grid`), `soc_entity`, `daily_entity`, `positive_color`, `invert`, `decimals` (2), `threshold` (0.005).
+Entity: `type` (solar|battery|grid|home|heatpump|ev|other), `name` (tooltip/editor label), `enabled` (false = hidden), `entity`, `icon`, `soc_entity`, `daily_entity`, `positive_color`, `invert`, `decimals` (2), `threshold` (0.005).
 
 ## Not included (add only on request)
 Status words ("Producing", "Using"), visual editor, translations, per-field click actions, auto sizing to content.

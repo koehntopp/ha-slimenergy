@@ -10,27 +10,27 @@ Compact HACS Lovelace card: 3 fields per row, as many rows as entities.
 Local mock: `python3 -m http.server 8765`, open `http://localhost:8765/preview.html`.
 
 ## Config
+Use the visual editor (drag to reorder, copy, remove, `Show` switch per device; only fields that apply to the device type are shown) or YAML:
 
 ```yaml
 type: custom:slim-energy-card
 price_entity: sensor.grid_price        # shown on type: grid
 entities:
-  - entity: sensor.solar_power
-    icon: mdi:solar-power              # or an emoji
-  - entity: sensor.battery_power
-    icon: mdi:battery
+  - type: solar                        # solar|battery|grid|home|heatpump|ev|other
+    entity: sensor.solar_power
+    daily_entity: sensor.solar_energy_today   # kWh, shown in brackets
+  - type: battery
+    entity: sensor.battery_power
     soc_entity: sensor.battery_soc     # shows (52%)
-    positive_color: red                # colour when value > 0 (default green)
-  - entity: sensor.grid_power
-    icon: mdi:transmission-tower
-    type: grid                         # shows (0.28 €/kWh)
-    positive_color: red
-  - entity: sensor.house_power
-    icon: 🏠
-    invert: true                       # flip sign before colouring
+  - type: grid
+    entity: sensor.grid_power          # bracket: (4.2 kWh · 0.28 €/kWh)
+    daily_entity: sensor.grid_import_today
+  - type: home
+    entity: sensor.house_power
+    name: House                        # tooltip, editor label
+    icon: mdi:home                     # default per type, mdi: or emoji
+    enabled: false                     # hide
 ```
 
-Configure via the card's visual editor or YAML. Each field has a `Show` switch (`enabled: false` hides it).
-
-Per-entity options: `enabled` (true), `entity`, `icon`, `type` (`grid`), `soc_entity`, `daily_entity` (daily kWh sensor, e.g. solar production or grid use; shown in brackets, grid shows `(4.2 kWh · 0.28 €/kWh)`), `positive_color` (`green`|`red`), `invert`, `decimals` (2), `threshold` (0.005 kW, below = neutral border).
+Per-entity options: `type` (default `other`), `entity`, `name`, `icon`, `soc_entity` (battery only), `daily_entity`, `positive_color` (`green`|`red`, default per type: green for solar/home/other, red for battery/grid/heatpump/ev; colour used when value > 0), `invert`, `enabled` (true), `decimals` (2), `threshold` (0.005 kW, below = neutral border).
 W values are shown as kW. Border colours: CSS vars `--slim-green`, `--slim-red`. Tap = more-info.

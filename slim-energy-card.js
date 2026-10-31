@@ -1,3 +1,13 @@
+const TYPES = {
+  solar: { label: "Solar PV", icon: "☀️", color: "green" },
+  battery: { label: "Battery", icon: "🔋", color: "red" },
+  grid: { label: "Grid", icon: "⚡", color: "red" },
+  home: { label: "Home", icon: "🏠", color: "green" },
+  heatpump: { label: "Heat pump", icon: "♨️", color: "red" },
+  ev: { label: "EV charger", icon: "🚗", color: "red" },
+  other: { label: "Other", icon: "mdi:flash", color: "green" },
+};
+
 class SlimEnergyCard extends HTMLElement {
   setConfig(config) {
     if (!Array.isArray(config.entities) || !config.entities.length) {
@@ -51,6 +61,7 @@ class SlimEnergyCard extends HTMLElement {
   }
 
   _field(c) {
+    const T = TYPES[c.type] || TYPES.other;
     const [n, s] = this._num(c.entity);
     let val = "n/a", color = "";
     if (!isNaN(n)) {
@@ -59,7 +70,7 @@ class SlimEnergyCard extends HTMLElement {
       val = `${Math.abs(kw).toFixed(c.decimals ?? 2)} ${unit === "W" || unit === "kW" ? "kW" : unit || ""}`;
       if (Math.abs(kw) > (c.threshold ?? 0.005)) {
         // positive_color: colour shown when value > 0 (default green)
-        const pos = c.positive_color === "red" ? "red" : "green";
+        const pos = (c.positive_color || T.color) === "red" ? "red" : "green";
         const neg = pos === "red" ? "green" : "red";
         color = (kw > 0) === (!c.invert) ? pos : neg;
       }
@@ -78,11 +89,11 @@ class SlimEnergyCard extends HTMLElement {
       if (!isNaN(p)) parts.push(`${p.toFixed(2)} ${ps.attributes.unit_of_measurement || ""}`.trim());
     }
     const extra = parts.length ? `(${parts.join(" · ")})` : "";
-    const icon = c.icon || "mdi:flash";
+    const icon = c.icon || T.icon;
     const ic = icon.includes(":")
       ? `<ha-icon class="ic" icon="${icon}"></ha-icon>`
       : `<span class="ic">${icon}</span>`;
-    return `<div class="f ${color}" data-e="${c.entity}">${ic}<span class="v">${val}</span><span class="x">${extra}</span></div>`;
+    return `<div class="f ${color}" data-e="${c.entity}" title="${(c.name || "").replace(/"/g, "&quot;")}">${ic}<span class="v">${val}</span><span class="x">${extra}</span></div>`;
   }
 
   _render() {
@@ -99,28 +110,37 @@ class SlimEnergyCard extends HTMLElement {
   }
 }
 
-const ent = { entity: {} };
+const ent = (extra = {}) => ({ entity: { domain: "sensor", ...extra } });
 const sel = (options) => ({ select: { options, mode: "dropdown" } });
-const FIELD_SCHEMA = [
-  { name: "enabled", selector: { boolean: {} } },
-  { name: "entity", selector: ent },
-  { name: "icon", selector: { icon: {} } },
-  { name: "type", selector: sel([{ value: "", label: "Normal" }, { value: "grid", label: "Grid (shows price)" }]) },
-  { name: "soc_entity", selector: ent },
-  { name: "daily_entity", selector: ent },
-  { name: "positive_color", selector: sel([{ value: "green", label: "Green" }, { value: "red", label: "Red" }]) },
-  { name: "invert", selector: { boolean: {} } },
-];
+const TYPE_OPTIONS = Object.entries(TYPES).map(([value, t]) => ({ value, label: t.label }));
 const LABELS = {
-  enabled: "Show", entity: "Power entity", icon: "Icon", type: "Type", soc_entity: "Battery SoC entity",
-  daily_entity: "Daily energy entity", positive_color: "Border colour when value > 0", invert: "Invert sign",
-  price_entity: "Grid price entity",
+  enabled: "Show", type: "Type", name: "Name", entity: "Power entity", icon: "Icon",
+  soc_entity: "Battery SoC entity", daily_entity: "Daily energy entity",
+  positive_color: "Border colour when value > 0", invert: "Invert sign", price_entity: "Grid price entity",
 };
+const bool = { boolean: {} };
+// fields depend on the device type: SoC only for batteries
+const schemaFor = (type) => [
+  { name: "enabled", selector: bool },
+  { name: "type", selector: sel(TYPE_OPTIONS) },
+  { name: "name", selector: { text: {} } },
+  { name: "entity", selector: ent() },
+  { name: "icon", selector: { icon: {} } },
+  ...(type === "battery" ? [{ name: "soc_entity", selector: ent({ device_class: "battery" }) }] : []),
+  { name: "daily_entity", selector: ent({ device_class: "energy" }) },
+  { name: "positive_color", selector: sel([{ value: "green", label: "Green" }, { value: "red", label: "Red" }]) },
+  { name: "invert", selector: bool },
+];
+const MANAGED = ["enabled", "type", "name", "entity", "icon", "soc_entity", "daily_entity", "positive_color", "invert"];
 
 class SlimEnergyCardEditor extends HTMLElement {
+  _nk = 0;
+  _open = new Set();
+
   setConfig(config) {
     if (JSON.stringify(config) === JSON.stringify(this._config)) return;
     this._config = config;
+    if (!this._keys || this._keys.length !== config.entities.length) this._keys = config.entities.map(() => this._nk++);
     this._render();
   }
 
@@ -129,9 +149,9 @@ class SlimEnergyCardEditor extends HTMLElement {
     this.querySelectorAll("ha-form").forEach((f) => (f.hass = hass));
   }
 
-  _emit(config) {
-    this._config = config;
-    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
+  _emit(entities, extra = {}) {
+    this._config = { ...this._config, ...extra, entities };
+    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: this._config }, bubbles: true, composed: true }));
   }
 
   _form(schema, data, onChange) {
@@ -147,45 +167,100 @@ class SlimEnergyCardEditor extends HTMLElement {
     return f;
   }
 
+  _head(sum, e) {
+    const T = TYPES[e.type] || TYPES.other;
+    const icon = e.icon || T.icon;
+    sum.querySelector(".ic").innerHTML = icon.includes(":") ? `<ha-icon icon="${icon}"></ha-icon>` : "";
+    if (!icon.includes(":")) sum.querySelector(".ic").textContent = icon;
+    sum.querySelector(".nm").textContent = (e.enabled === false ? "(off) " : "") + (e.name || T.label);
+    sum.querySelector(".id").textContent = e.entity || "";
+    sum.querySelector(".warn").textContent = e.entity ? "" : "⚠ no entity";
+  }
+
+  _move(from, to) {
+    const entities = this._config.entities.slice();
+    entities.splice(to, 0, entities.splice(from, 1)[0]);
+    this._keys.splice(to, 0, this._keys.splice(from, 1)[0]);
+    this._emit(entities);
+    this._render();
+  }
+
   _render() {
-    this.innerHTML = "";
     const c = this._config;
-    this.appendChild(this._form([{ name: "price_entity", selector: ent }], { price_entity: c.price_entity }, (v) => {
-      const n = { ...c, price_entity: v.price_entity };
-      if (!n.price_entity) delete n.price_entity;
-      this._emit(n);
-    }));
-    c.entities.forEach((e, i) => {
-      const d = document.createElement("details");
-      d.open = !e.entity;
-      d.innerHTML = `<summary style="cursor:pointer;padding:8px 0">${e.enabled === false ? "(off) " : ""}${e.entity || "new field"}</summary>`;
-      const data = { ...e, enabled: e.enabled !== false, type: e.type || "", positive_color: e.positive_color || "green" };
-      d.appendChild(this._form(FIELD_SCHEMA, data, (v) => {
-        const n = { entity: v.entity };
-        for (const k of ["icon", "soc_entity", "daily_entity"]) if (v[k]) n[k] = v[k];
-        if (v.type) n.type = v.type;
-        if (v.positive_color === "red") n.positive_color = "red";
-        if (v.invert) n.invert = true;
-        if (!v.enabled) n.enabled = false;
-        const kept = { ...e };
-        FIELD_SCHEMA.forEach((s) => delete kept[s.name]);
-        const entities = c.entities.slice();
-        entities[i] = { ...kept, ...n };
-        this._emit({ ...c, entities });
+    this.innerHTML = `<style>
+      .row { background: var(--card-background-color); border: 1px solid var(--divider-color); border-radius: 12px; margin: 8px 0; padding: 0 12px 8px; }
+      .row.over { outline: 2px dashed var(--primary-color); }
+      summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; padding: 10px 0; }
+      summary::-webkit-details-marker { display: none; }
+      .h { cursor: grab; } .nm { font-weight: 600; } .warn { color: var(--warning-color, #ffa600); }
+      .id { flex: 1; min-width: 0; color: var(--secondary-text-color); font-size: .8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .btn { cursor: pointer; --mdc-icon-size: 20px; }
+      .add { display: inline-block; cursor: pointer; color: var(--primary-color); padding: 8px 0; }
+    </style>`;
+    if (c.entities.some((e) => e.type === "grid")) {
+      this.appendChild(this._form([{ name: "price_entity", selector: ent() }], { price_entity: c.price_entity }, (v) => {
+        const extra = { price_entity: v.price_entity };
+        if (!v.price_entity) delete this._config.price_entity;
+        this._emit(c.entities, v.price_entity ? extra : {});
       }));
-      const rm = document.createElement("mwc-button");
-      rm.textContent = "Remove";
-      rm.addEventListener("click", () => {
-        this._emit({ ...c, entities: c.entities.filter((_, j) => j !== i) });
+    }
+    c.entities.forEach((e, i) => {
+      const key = this._keys[i];
+      const d = document.createElement("details");
+      d.className = "row";
+      d.open = this._open.has(key) || !e.entity;
+      d.addEventListener("toggle", () => (d.open ? this._open.add(key) : this._open.delete(key)));
+      const sum = document.createElement("summary");
+      sum.innerHTML = `<ha-icon class="h" icon="mdi:drag"></ha-icon><span class="ic"></span><span class="nm"></span><span class="id"></span><span class="warn"></span>
+        <ha-icon class="btn cp" icon="mdi:content-copy"></ha-icon><ha-icon class="btn rm" icon="mdi:close"></ha-icon>`;
+      this._head(sum, e);
+      const act = (cls, fn) => sum.querySelector(cls).addEventListener("click", (ev) => { ev.preventDefault(); ev.stopPropagation(); fn(); });
+      act(".cp", () => {
+        const entities = c.entities.slice();
+        entities.splice(i + 1, 0, { ...e });
+        this._keys.splice(i + 1, 0, this._nk++);
+        this._emit(entities);
         this._render();
       });
-      d.appendChild(rm);
+      act(".rm", () => {
+        this._keys.splice(i, 1);
+        this._emit(c.entities.filter((_, j) => j !== i));
+        this._render();
+      });
+      const h = sum.querySelector(".h");
+      h.addEventListener("mousedown", () => (d.draggable = true));
+      d.addEventListener("dragend", () => { d.draggable = false; });
+      d.addEventListener("dragstart", (ev) => { this._drag = i; ev.dataTransfer.setData("text/plain", ""); ev.dataTransfer.effectAllowed = "move"; });
+      d.addEventListener("dragover", (ev) => { ev.preventDefault(); d.classList.add("over"); });
+      d.addEventListener("dragleave", () => d.classList.remove("over"));
+      d.addEventListener("drop", (ev) => { ev.preventDefault(); if (this._drag !== undefined && this._drag !== i) this._move(this._drag, i); this._drag = undefined; });
+      d.appendChild(sum);
+      const type = e.type || "other";
+      const data = { ...e, enabled: e.enabled !== false, type, positive_color: e.positive_color || TYPES[type].color };
+      d.appendChild(this._form(schemaFor(type), data, (v) => {
+        const n = {};
+        const kept = { ...e };
+        MANAGED.forEach((k) => delete kept[k]);
+        for (const k of ["name", "icon", "entity", "daily_entity", ...(v.type === "battery" ? ["soc_entity"] : [])]) if (v[k] || k === "entity") n[k] = v[k] || "";
+        if (v.type && v.type !== "other") n.type = v.type;
+        // a colour that was just the old type's default follows the new type
+        const dflt = v.type !== type && v.positive_color === TYPES[type].color ? TYPES[v.type].color : v.positive_color;
+        if (dflt && dflt !== TYPES[v.type].color) n.positive_color = dflt;
+        if (v.invert) n.invert = true;
+        if (!v.enabled) n.enabled = false;
+        const entities = c.entities.slice();
+        entities[i] = { ...kept, ...n };
+        this._emit(entities);
+        if (v.type !== type) this._render(); else this._head(sum, entities[i]);
+      }));
       this.appendChild(d);
     });
-    const add = document.createElement("mwc-button");
-    add.textContent = "Add field";
+    const add = document.createElement("div");
+    add.className = "add";
+    add.textContent = "+ Add device";
     add.addEventListener("click", () => {
-      this._emit({ ...c, entities: [...c.entities, { entity: "" }] });
+      this._keys.push(this._nk++);
+      this._emit([...c.entities, { entity: "" }]);
       this._render();
     });
     this.appendChild(add);

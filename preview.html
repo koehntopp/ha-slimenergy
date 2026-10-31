@@ -6,10 +6,10 @@
   ha-card { display: block; }
   ha-icon { display: inline-block; }
   h4 { margin: 24px 0 8px; color: var(--secondary-text-color); font-weight: 400; }
-  #editor { max-width: 420px; }
+  #editor { max-width: 480px; --primary-color: #4aa3ff; --warning-color: #ffa600; }
   ha-form { display: block; }
   ha-form label { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; font-size: 14px; }
-  ha-form input[type=text] { background: #16263d; color: inherit; border: 1px solid var(--divider-color); border-radius: 4px; padding: 2px 6px; width: 55%; }
+  ha-form input[type=text], ha-form select { background: #16263d; color: inherit; border: 1px solid var(--divider-color); border-radius: 4px; padding: 2px 6px; width: 55%; }
   mwc-button { display: inline-block; cursor: pointer; color: #4aa3ff; padding: 6px 0; margin-right: 12px; }
   pre { font-size: 12px; color: var(--secondary-text-color); }
 </style>
@@ -19,18 +19,26 @@
 <pre id="yaml"></pre>
 <script>
   // minimal ha-form mock: checkbox for booleans, text input otherwise
+  const GLYPH = { "mdi:drag": "≡", "mdi:content-copy": "⧉", "mdi:close": "✕" };
+  customElements.define("ha-icon", class extends HTMLElement {
+    connectedCallback() { this.textContent = GLYPH[this.getAttribute("icon")] || "•"; }
+  });
   customElements.define("ha-form", class extends HTMLElement {
     connectedCallback() {
       this.innerHTML = "";
       for (const s of this.schema) {
-        const bool = "boolean" in s.selector;
+        const k = Object.keys(s.selector)[0];
         const l = document.createElement("label");
         l.append(this.computeLabel(s));
-        const i = document.createElement("input");
-        i.type = bool ? "checkbox" : "text";
-        if (bool) i.checked = !!this.data[s.name]; else i.value = this.data[s.name] ?? "";
+        let i;
+        if (k === "boolean") { i = document.createElement("input"); i.type = "checkbox"; i.checked = !!this.data[s.name]; }
+        else if (k === "select") {
+          i = document.createElement("select");
+          for (const o of s.selector.select.options) i.add(new Option(o.label, o.value));
+          i.value = this.data[s.name] ?? "";
+        } else { i = document.createElement("input"); i.type = "text"; i.value = this.data[s.name] ?? ""; }
         i.addEventListener("change", () => {
-          const value = { ...this.data, [s.name]: bool ? i.checked : i.value };
+          const value = { ...this.data, [s.name]: k === "boolean" ? i.checked : i.value };
           this.data = value;
           this.dispatchEvent(new CustomEvent("value-changed", { detail: { value } }));
         });
@@ -57,12 +65,12 @@
   const config = {
     price_entity: "sensor.price",
     entities: [
-      { entity: "sensor.solar", icon: "☀️", daily_entity: "sensor.solar_day" },
-      { entity: "sensor.bat", icon: "🔋", soc_entity: "sensor.soc", positive_color: "red" },
-      { entity: "sensor.grid", icon: "⚡", type: "grid", daily_entity: "sensor.grid_day", positive_color: "red" },
-      { entity: "sensor.house", icon: "🏠", daily_entity: "sensor.house_day" },
-      { entity: "sensor.heat", icon: "♨️", daily_entity: "sensor.heat_day", positive_color: "red" },
-      { entity: "sensor.car", icon: "🚗", positive_color: "red", enabled: false },
+      { entity: "sensor.solar", type: "solar", daily_entity: "sensor.solar_day" },
+      { entity: "sensor.bat", type: "battery", soc_entity: "sensor.soc" },
+      { entity: "sensor.grid", type: "grid", daily_entity: "sensor.grid_day" },
+      { entity: "sensor.house", type: "home", name: "House", daily_entity: "sensor.house_day" },
+      { entity: "sensor.heat", type: "heatpump", daily_entity: "sensor.heat_day" },
+      { entity: "sensor.car", type: "ev", enabled: false },
     ],
   };
   card.hass = hass;
