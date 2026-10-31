@@ -164,6 +164,7 @@ class SlimEnergyCardEditor extends HTMLElement {
     f.computeLabel = (s) => LABELS[s.name] || s.name;
     f.addEventListener("value-changed", (e) => {
       e.stopPropagation();
+      f.data = e.detail.value; // ha-form merges edits into its data prop
       onChange(e.detail.value);
     });
     return f;
@@ -211,15 +212,15 @@ class SlimEnergyCardEditor extends HTMLElement {
       this._head(sum, e);
       const act = (cls, fn) => sum.querySelector(cls).addEventListener("click", (ev) => { ev.preventDefault(); ev.stopPropagation(); fn(); });
       act(".cp", () => {
-        const entities = c.entities.slice();
-        entities.splice(i + 1, 0, { ...e });
+        const entities = this._config.entities.slice(); // closures outlive renders: never use the render-time config
+        entities.splice(i + 1, 0, { ...entities[i] });
         this._keys.splice(i + 1, 0, this._nk++);
         this._emit(entities);
         this._render();
       });
       act(".rm", () => {
         this._keys.splice(i, 1);
-        this._emit(c.entities.filter((_, j) => j !== i));
+        this._emit(this._config.entities.filter((_, j) => j !== i));
         this._render();
       });
       const h = sum.querySelector(".h");
@@ -234,7 +235,8 @@ class SlimEnergyCardEditor extends HTMLElement {
       const data = { ...e, enabled: e.enabled !== false, type, positive_color: e.positive_color || TYPES[type].color };
       d.appendChild(this._form(schemaFor(type), data, (v) => {
         const n = {};
-        const kept = { ...e };
+        const entities = this._config.entities.slice();
+        const kept = { ...entities[i] };
         MANAGED.forEach((k) => delete kept[k]);
         for (const k of ["name", "icon", "entity", "daily_entity", ...(v.type === "battery" ? ["soc_entity"] : []), ...(v.type === "grid" ? ["price_entity"] : [])]) if (v[k] || k === "entity") n[k] = v[k] || "";
         if (v.type && v.type !== "other") n.type = v.type;
@@ -243,7 +245,6 @@ class SlimEnergyCardEditor extends HTMLElement {
         if (dflt && dflt !== TYPES[v.type].color) n.positive_color = dflt;
         if (v.invert) n.invert = true;
         if (!v.enabled) n.enabled = false;
-        const entities = c.entities.slice();
         entities[i] = { ...kept, ...n };
         this._emit(entities);
         if (v.type !== type) this._render(); else this._head(sum, entities[i]);
@@ -255,7 +256,7 @@ class SlimEnergyCardEditor extends HTMLElement {
     add.textContent = "+ Add device";
     add.addEventListener("click", () => {
       this._keys.push(this._nk++);
-      this._emit([...c.entities, { entity: "" }]);
+      this._emit([...this._config.entities, { entity: "" }]);
       this._render();
     });
     this.appendChild(add);
