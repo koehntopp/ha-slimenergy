@@ -14,7 +14,7 @@ HACS Lovelace card (`custom:slim-energy-card`). Goal: very simple, slim energy o
 - Border colour from sign: value > 0 uses `positive_color` (`green` default, or `red`), value < 0 the opposite. `invert: true` flips the sign first. `abs(kW) <= threshold` (default 0.005) = neutral border.
 - Bracket text, parts joined with ` · `, in order: battery SoC (`soc_entity`, `52%`), daily energy (`daily_entity`, kWh, Wh converted, 1 decimal), grid price (only `type: grid`, from its `price_entity`, 2 decimals + its unit).
   - Solar: `daily_entity` = daily production. Grid: `daily_entity` = daily use, e.g. `(4.2 kWh · 0.28 €/kWh)`.
-- Icon per entity: `mdi:...` (rendered via `ha-icon`) or an emoji.
+- Icon per entity: built-in coloured Twemoji SVG name (`solar battery grid home heatpump ev plug`, inlined in `ICONS`; CC-BY 4.0, credit kept in README; originals in `assets/twemoji/`), `mdi:...` (via `ha-icon`) or an emoji. Type defaults use the built-ins.
 - Tap on a field fires `hass-more-info` for its entity.
 - Border colours overridable via CSS vars `--slim-green`, `--slim-red`.
 
