@@ -1,0 +1,74 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 24px; background: #0c1624; font-family: Roboto, sans-serif; color: #e8eaed;
+         --divider-color: #3a4556; --card-background-color: #0e1b2e; --secondary-text-color: #9aa4b2; }
+  ha-card { display: block; }
+  ha-icon { display: inline-block; }
+  h4 { margin: 24px 0 8px; color: var(--secondary-text-color); font-weight: 400; }
+  #editor { max-width: 420px; }
+  ha-form { display: block; }
+  ha-form label { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; font-size: 14px; }
+  ha-form input[type=text] { background: #16263d; color: inherit; border: 1px solid var(--divider-color); border-radius: 4px; padding: 2px 6px; width: 55%; }
+  mwc-button { display: inline-block; cursor: pointer; color: #4aa3ff; padding: 6px 0; margin-right: 12px; }
+  pre { font-size: 12px; color: var(--secondary-text-color); }
+</style>
+<slim-energy-card></slim-energy-card>
+<h4>Editor (ha-form mocked here; real HA renders native selectors)</h4>
+<div id="editor"><slim-energy-card-editor></slim-energy-card-editor></div>
+<pre id="yaml"></pre>
+<script>
+  // minimal ha-form mock: checkbox for booleans, text input otherwise
+  customElements.define("ha-form", class extends HTMLElement {
+    connectedCallback() {
+      this.innerHTML = "";
+      for (const s of this.schema) {
+        const bool = "boolean" in s.selector;
+        const l = document.createElement("label");
+        l.append(this.computeLabel(s));
+        const i = document.createElement("input");
+        i.type = bool ? "checkbox" : "text";
+        if (bool) i.checked = !!this.data[s.name]; else i.value = this.data[s.name] ?? "";
+        i.addEventListener("change", () => {
+          const value = { ...this.data, [s.name]: bool ? i.checked : i.value };
+          this.data = value;
+          this.dispatchEvent(new CustomEvent("value-changed", { detail: { value } }));
+        });
+        l.append(i);
+        this.append(l);
+      }
+    }
+  });
+</script>
+<script src="slim-energy-card.js"></script>
+<script>
+  const st = (state, unit) => ({ state: String(state), attributes: { unit_of_measurement: unit } });
+  const hass = { states: {
+    "sensor.solar": st(6930, "W"), "sensor.solar_day": st(31.4, "kWh"),
+    "sensor.bat": st(130, "W"), "sensor.soc": st(52, "%"),
+    "sensor.grid": st(-0.01, "kW"), "sensor.grid_day": st(4.2, "kWh"), "sensor.price": st(0.28, "€/kWh"),
+    "sensor.house": st(6.09, "kW"), "sensor.house_day": st(28.7, "kWh"),
+    "sensor.heat": st(0.66, "kW"), "sensor.heat_day": st(9.3, "kWh"),
+    "sensor.car": st(-6.11, "kW"),
+  } };
+  const card = document.querySelector("slim-energy-card");
+  const editor = document.querySelector("slim-energy-card-editor");
+  const show = (c) => (document.getElementById("yaml").textContent = JSON.stringify(c, null, 1));
+  const config = {
+    price_entity: "sensor.price",
+    entities: [
+      { entity: "sensor.solar", icon: "☀️", daily_entity: "sensor.solar_day" },
+      { entity: "sensor.bat", icon: "🔋", soc_entity: "sensor.soc", positive_color: "red" },
+      { entity: "sensor.grid", icon: "⚡", type: "grid", daily_entity: "sensor.grid_day", positive_color: "red" },
+      { entity: "sensor.house", icon: "🏠", daily_entity: "sensor.house_day" },
+      { entity: "sensor.heat", icon: "♨️", daily_entity: "sensor.heat_day", positive_color: "red" },
+      { entity: "sensor.car", icon: "🚗", positive_color: "red", enabled: false },
+    ],
+  };
+  card.hass = hass;
+  card.setConfig(config);
+  editor.hass = hass;
+  editor.setConfig(config);
+  show(config);
+  editor.addEventListener("config-changed", (e) => { card.setConfig(e.detail.config); show(e.detail.config); });
+</script>

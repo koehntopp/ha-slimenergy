@@ -1,0 +1,35 @@
+# Slim Energy Card
+
+HACS Lovelace card (`custom:slim-energy-card`). Goal: very simple, slim energy overview.
+
+## Files
+- `slim-energy-card.js`: whole card, vanilla custom element, no deps, no build.
+- `hacs.json`: HACS manifest (type Dashboard, `filename` = the js file).
+- `README.md`: user docs and config example. Keep in sync with the options below.
+- `preview.html`: local mock (fake `hass`, emoji icons, mocked `ha-form`) loading the real card JS; editor changes update the card live and print the resulting config.
+
+## Spec
+- Fields in a 3-column grid; one field per entry in `entities`, so 6 entities = 2 rows. Pill: border, icon, value, optional bracket text.
+- Value shown as absolute kW (W converted to kW); other units shown as-is. Missing/non-numeric state shows `n/a`.
+- Border colour from sign: value > 0 uses `positive_color` (`green` default, or `red`), value < 0 the opposite. `invert: true` flips the sign first. `abs(kW) <= threshold` (default 0.005) = neutral border.
+- Bracket text, parts joined with ` · `, in order: battery SoC (`soc_entity`, `52%`), daily energy (`daily_entity`, kWh, Wh converted, 1 decimal), grid price (only `type: grid`, from card-level `price_entity`, 2 decimals + its unit).
+  - Solar: `daily_entity` = daily production. Grid: `daily_entity` = daily use, e.g. `(4.2 kWh · 0.28 €/kWh)`.
+- Icon per entity: `mdi:...` (rendered via `ha-icon`) or an emoji.
+- Tap on a field fires `hass-more-info` for its entity.
+- Border colours overridable via CSS vars `--slim-green`, `--slim-red`.
+
+- Visual editor (`slim-energy-card-editor`, same file, via `getConfigElement`): `ha-form` for `price_entity` and one collapsible form per field (all entity options, plus a `Show` switch = `enabled`), Remove, Add field. Disabled fields (`enabled: false`) or fields without `entity` are not rendered and don't take a grid slot. Editor skips re-render when the config echoed back is unchanged (keeps input focus). Icon selector is mdi-only; emoji icons still work via YAML.
+
+## Config
+Card: `entities` (required), `price_entity`.
+Entity: `enabled` (false = hidden), `entity`, `icon`, `type` (`grid`), `soc_entity`, `daily_entity`, `positive_color`, `invert`, `decimals` (2), `threshold` (0.005).
+
+## Not included (add only on request)
+Status words ("Producing", "Using"), visual editor, translations, per-field click actions, auto sizing to content.
+
+## Workflow
+- Preview: `python3 -m http.server 8765` in repo root, open `http://localhost:8765/preview.html` (file:// does not run scripts in the browser pane).
+- After EVERY change to the card, `preview.html`, or config options: update `preview.html` so it exercises the change (mock entities, config), reload it in the browser pane, and check a screenshot.
+- Editing `preview.html` makes the harness auto-open a blank `file://` tab and front it. After each edit: close that tab, front the `http://localhost:8765` tab, reload, screenshot.
+- Keep README, this file, and preview in sync with any option change.
+- Style: minimal code, no unrequested abstractions.
