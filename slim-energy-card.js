@@ -104,18 +104,15 @@ class SlimEnergyCard extends HTMLElement {
       if (!isNaN(soc)) parts.push(`${Math.round(soc)}%`);
     }
     const [d, du] = this._sum([c.daily_entity, c.daily_entity_2], true);
-    let line2 = "";
-    if (!isNaN(d)) {
-      const t = `${d.toFixed(1)} ${du || "kWh"}`;
-      if (c.daily_line) line2 = `<span class="x">${t}</span>`;
-      else parts.push(t);
-    }
+    if (!isNaN(d)) parts.push(`${d.toFixed(1)} ${du || "kWh"}`);
     const price = c.price_entity || this._config.price_entity; // card-level kept for old configs
     if (c.type === "grid" && price) {
       const [p, ps] = this._num(price);
       if (!isNaN(p)) parts.push(`${p.toFixed(2)} ${ps.attributes.unit_of_measurement || ""}`.trim());
     }
-    const extra = parts.length ? `(${parts.join(" · ")})` : "";
+    const text = parts.join(" · ");
+    const extra = text && !c.daily_line ? `(${text})` : "";
+    const line2 = text && c.daily_line ? `<span class="x">${text}</span>` : ""; // daily_line: all bracket parts on a second line
     const icon = c.icon || T.icon;
     let style = "";
     if (c.soc_fill && c.soc_entity) {
@@ -149,7 +146,7 @@ const sel = (options) => ({ select: { options, mode: "dropdown" } });
 const TYPE_OPTIONS = Object.entries(TYPES).map(([value, t]) => ({ value, label: t.label }));
 const LABELS = {
   enabled: "Show", type: "Type", name: "Name", entity: "Power entity", icon: "Icon",
-  entity_2: "Second power entity (optional, added)", daily_entity_2: "Second daily energy entity (optional, added)", soc_entity: "Battery SoC entity", soc_fill: "Fill pill by state of charge", daily_entity: "Daily energy entity", daily_line: "Daily energy on second line",
+  entity_2: "Second power entity (optional, added)", daily_entity_2: "Second daily energy entity (optional, added)", soc_entity: "Battery SoC entity", soc_fill: "Fill pill by state of charge", daily_entity: "Daily energy entity", daily_line: "Details on second line",
   positive_color: "Border colour when value > 0", invert: "Invert sign", price_entity: "Price entity",
 };
 const bool = { boolean: {} };

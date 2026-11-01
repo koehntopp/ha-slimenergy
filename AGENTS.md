@@ -16,7 +16,7 @@ HACS Lovelace card (`custom:slim-energy-card`). Goal: very simple, slim energy o
 - Bracket text, parts joined with ` · `, in order: battery SoC (`soc_entity`, `52%`), daily energy (`daily_entity`, kWh, Wh converted, 1 decimal), grid price (only `type: grid`, from its `price_entity`, 2 decimals + its unit).
   - Solar: `daily_entity` = daily production. Grid: `daily_entity` = daily use, e.g. `(4.2 kWh · 0.28 €/kWh)`.
 - Daily value without a unit (e.g. a meter on a unit-less source) is shown as kWh.
-- `daily_line: true`: daily energy goes on a second line (muted text under the value) instead of into the brackets; saves width.
+- `daily_line: true`: all bracket parts (SoC, daily, price, joined with ` · `) go on a second line, without brackets, instead of next to the value; saves width. Key name kept from when it only moved the daily value.
 - Battery `soc_fill: true` (needs `soc_entity`): pill background filled left to right to SoC%, gradient red to hsl(SoC*1.2) (red low, green high). Off by default.
 - Solar only: `entity_2` and `daily_entity_2` (second inverter) are summed with `entity` / `daily_entity` (`_sum`, W to kW, Wh to kWh; unavailable ones skipped). Tap opens more-info of `entity`.
 - Icon per entity: any `mdi:...` (via `ha-icon`) or emoji. Defaults per type are standard MDI icons (`TYPES`): sun `mdi:white-balance-sunny`, battery `mdi:battery-charging-medium`, grid `mdi:transmission-tower`, home `mdi:home`, heat pump `mdi:heat-pump`, EV `mdi:car-electric`, other `mdi:flash`. Chosen to match what the owner had configured by hand; no coloured/embedded icons (rejected). Editor icon picker shows the type default as placeholder.
