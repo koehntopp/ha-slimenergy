@@ -64,7 +64,7 @@ The border shows the direction of the energy, not whether it is "good":
 | `entity` | required | Power sensor (W or kW). Shown as absolute kW. |
 | `entity_2` | | Solar only: optional second power sensor (second inverter), added to `entity` |
 | `name` | type name | Tooltip and editor label |
-| `icon` | per type | Any `mdi:...` icon or an emoji. Defaults: solar `mdi:white-balance-sunny`, battery `mdi:battery-charging-medium`, grid `mdi:transmission-tower`, home `mdi:home`, heat pump `mdi:heat-pump`, EV `mdi:car-electric`, other `mdi:flash` |
+| `icon` | per type | Any `mdi:...` icon or an emoji. Defaults: solar `mdi:white-balance-sunny`, battery `mdi:battery-charging-medium`, grid `mdi:transmission-tower`, home `mdi:home`, heat pump `bha:heat-pump` (shown when the [BHA icon pack](https://github.com/hulkhaugen/hass-bha-icons) is installed, else `mdi:heat-pump`), EV `mdi:car-electric`, other `mdi:flash` |
 | `soc_entity` | | Battery only: state of charge, shown as `(52%)` |
 | `soc_fill` | `false` | Battery only: fill the pill from the left up to the state of charge, with a red to green gradient |
 | `daily_entity_2` | | Solar only: second daily energy sensor, added to `daily_entity` |

@@ -1,3 +1,4 @@
+const typeIcon = (T) => (T.fallback && !window.customIconsets?.[T.icon.split(":")[0]] ? T.fallback : T.icon);
 const iconHtml = (i) => (i.includes(":") ? `<ha-icon icon="${i}"></ha-icon>` : i); // "mdi:..." or an emoji
 
 const TYPES = {
@@ -5,7 +6,7 @@ const TYPES = {
   battery: { label: "Battery", icon: "mdi:battery-charging-medium", color: "red" },
   grid: { label: "Grid", icon: "mdi:transmission-tower", color: "red" },
   home: { label: "Home", icon: "mdi:home", color: "green" },
-  heatpump: { label: "Heat pump", icon: "mdi:heat-pump", color: "red" },
+  heatpump: { label: "Heat pump", icon: "bha:heat-pump", fallback: "mdi:heat-pump", color: "red" }, // bha: icon pack (HACS), mdi when not installed
   ev: { label: "EV charger", icon: "mdi:car-electric", color: "red" },
   other: { label: "Other", icon: "mdi:flash", color: "green" },
 };
@@ -113,7 +114,7 @@ class SlimEnergyCard extends HTMLElement {
     const text = parts.join(" · ");
     const extra = text && !c.daily_line ? `(${text})` : "";
     const line2 = text && c.daily_line ? `<span class="x">${text}</span>` : ""; // daily_line: all bracket parts on a second line
-    const icon = c.icon || T.icon;
+    const icon = c.icon || typeIcon(T);
     let style = "";
     if (c.soc_fill && c.soc_entity) {
       // pill filled left to right up to the SoC, gradient red -> hue of the current level (0 red, 120 green)
@@ -157,7 +158,7 @@ const schemaFor = (type) => [
   { name: "name", selector: { text: {} } },
   { name: "entity", selector: ent() },
   ...(type === "solar" ? [{ name: "entity_2", selector: ent() }] : []),
-  { name: "icon", selector: { icon: { placeholder: TYPES[type].icon } } }, // standard icon shown as placeholder
+  { name: "icon", selector: { icon: { placeholder: typeIcon(TYPES[type]) } } }, // standard icon shown as placeholder
   ...(type === "battery" ? [{ name: "soc_entity", selector: ent({ device_class: "battery" }) }, { name: "soc_fill", selector: bool }] : []),
   ...(type === "grid" ? [{ name: "price_entity", selector: ent() }] : []),
   { name: "daily_entity", selector: ent({ device_class: "energy" }) },
@@ -209,7 +210,7 @@ class SlimEnergyCardEditor extends HTMLElement {
 
   _head(sum, e) {
     const T = TYPES[e.type] || TYPES.other;
-    const icon = e.icon || T.icon;
+    const icon = e.icon || typeIcon(T);
     sum.querySelector(".ic").innerHTML = iconHtml(icon);
     sum.querySelector(".nm").textContent = (e.enabled === false ? "(off) " : "") + (e.name || T.label);
     sum.querySelector(".id").textContent = e.entity || "";
