@@ -9,7 +9,7 @@ A compact Home Assistant Lovelace card that shows your energy flows in a few sma
 - Border colour shows the energy direction (green or red, configurable per device, can be inverted).
 - Brackets show what matters per device type: battery state of charge, daily energy (kWh), grid price.
 - Visual editor: drag to reorder, copy, remove, and switch any device off. Only fields that apply to the device type are shown.
-- Built-in coloured icons per device type, or use any `mdi:` icon or emoji.
+- Standard `mdi:` icon per device type (sun, battery, tower, house, heat pump, car); override with any `mdi:` icon or emoji.
 - Tap a pill to open the entity's more-info dialog.
 - W values are converted to kW automatically. No dependencies, one JS file.
 
@@ -52,7 +52,7 @@ entities:
 | `type` | `other` | `solar`, `battery`, `grid`, `home`, `heatpump`, `ev`, `other` |
 | `entity` | required | Power sensor (W or kW). Shown as absolute kW. |
 | `name` | type name | Tooltip and editor label |
-| `icon` | per type | Built-in name (`solar battery grid home heatpump ev plug`), `mdi:...`, or an emoji |
+| `icon` | per type | Any `mdi:...` icon or an emoji. Defaults: solar `mdi:white-balance-sunny`, battery `mdi:battery-charging-medium`, grid `mdi:transmission-tower`, home `mdi:home`, heat pump `mdi:heat-pump`, EV `mdi:car-electric`, other `mdi:flash` |
 | `soc_entity` | | Battery only: state of charge, shown as `(52%)` |
 | `price_entity` | | Grid only: price, shown in brackets |
 | `daily_entity` | | Daily energy sensor in kWh or Wh, shown in brackets |
@@ -67,5 +67,5 @@ Border colours can be themed with the CSS variables `--slim-green` and `--slim-r
 ## Development
 `python3 -m http.server 8765`, then open `http://localhost:8765/preview.html`. It runs the real card against mock entities and a mocked form component. `?only=card` and `?only=editor&open=2` give the views used for the screenshots.
 
-## Credits and licence
-Code: MIT, see [LICENSE](LICENSE). Built-in icons are [Twemoji](https://github.com/jdecked/twemoji) graphics, CC-BY 4.0 (Twitter, Inc. and other contributors), embedded in `slim-energy-card.js`; originals in `assets/twemoji/`.
+## Licence
+MIT, see [LICENSE](LICENSE). Icons come from Home Assistant's built-in Material Design Icons.

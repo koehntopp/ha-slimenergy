@@ -1,10 +1,11 @@
 <!doctype html>
 <meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
 <style>
   body { margin: 0; padding: 24px; background: #0c1624; font-family: Roboto, sans-serif; color: #e8eaed;
          --divider-color: #3a4556; --card-background-color: #0e1b2e; --secondary-text-color: #9aa4b2; }
   ha-card { display: block; }
-  ha-icon { display: inline-block; }
+  ha-icon { display: inline-flex; font-size: 20px; }
   h4 { margin: 24px 0 8px; color: var(--secondary-text-color); font-weight: 400; }
   #editor { max-width: 480px; --primary-color: #4aa3ff; --warning-color: #ffa600; }
   ha-form { display: block; }
@@ -19,9 +20,16 @@
 <pre id="yaml"></pre>
 <script>
   // minimal ha-form mock: checkbox for booleans, text input otherwise
-  const GLYPH = { "mdi:drag": "≡", "mdi:content-copy": "⧉", "mdi:close": "✕" };
+  // ha-icon mock: MDI webfont (HA ships its own)
   customElements.define("ha-icon", class extends HTMLElement {
-    connectedCallback() { this.textContent = GLYPH[this.getAttribute("icon")] || "•"; }
+    connectedCallback() {
+      const r = this.getRootNode(); // webfont CSS does not cross into the card's shadow root
+      if (r !== document && !r.querySelector("link[data-mdi]")) {
+        const l = document.createElement("link");
+        l.rel = "stylesheet"; l.href = document.querySelector("link").href; l.setAttribute("data-mdi", "");
+        r.prepend(l);
+      }
+      this.innerHTML = `<i class="mdi mdi-${this.getAttribute("icon").slice(4)}"></i>`; }
   });
   customElements.define("ha-form", class extends HTMLElement {
     connectedCallback() {
@@ -36,7 +44,7 @@
           i = document.createElement("select");
           for (const o of s.selector.select.options) i.add(new Option(o.label, o.value));
           i.value = this.data[s.name] ?? "";
-        } else { i = document.createElement("input"); i.type = "text"; i.value = this.data[s.name] ?? ""; }
+        } else { i = document.createElement("input"); i.type = "text"; i.value = this.data[s.name] ?? ""; i.placeholder = s.selector.icon?.placeholder ?? ""; }
         i.addEventListener("change", () => {
           const value = { ...this.data, [s.name]: k === "boolean" ? i.checked : i.value };
           this.data = value;
