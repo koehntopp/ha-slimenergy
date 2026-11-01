@@ -77,5 +77,13 @@
   editor.hass = hass;
   editor.setConfig(config);
   show(config);
+  // ?only=card | ?only=editor&open=2,3 (used for README screenshots)
+  const q = new URLSearchParams(location.search);
+  if (q.get("only")) {
+    document.querySelectorAll("h4, #yaml").forEach((e) => (e.hidden = true));
+    if (q.get("only") === "card") document.getElementById("editor").hidden = true;
+    else card.hidden = true;
+    (q.get("open") || "").split(",").filter(Boolean).forEach((i) => (editor.querySelectorAll("details")[i].open = true));
+  }
   editor.addEventListener("config-changed", (e) => { card.setConfig(e.detail.config); show(e.detail.config); });
 </script>

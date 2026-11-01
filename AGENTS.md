@@ -27,6 +27,8 @@ Entity: `type` (solar|battery|grid|home|heatpump|ev|other), `name` (tooltip/edit
 ## Not included (add only on request)
 Status words ("Producing", "Using"), visual editor, translations, per-field click actions, auto sizing to content.
 
+- Screenshots in `docs/` (README) are made headless from `preview.html` (`?only=card`, `?only=editor&open=2`): `Google Chrome --headless=new --force-device-scale-factor=2 --window-size=W,H --screenshot=docs/X.png URL`. Regenerate when card or editor look changes. Editor shots use the mocked `ha-form`, not real HA widgets.
+
 ## Workflow
 - Preview: `python3 -m http.server 8765` in repo root, open `http://localhost:8765/preview.html` (file:// does not run scripts in the browser pane).
 - After EVERY change to the card, `preview.html`, or config options: update `preview.html` so it exercises the change (mock entities, config), reload it in the browser pane, and check a screenshot.
