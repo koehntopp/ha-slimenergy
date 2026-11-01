@@ -2,7 +2,7 @@
 
 A compact Home Assistant Lovelace card that shows your energy flows in a few small pills: solar, battery, grid, home, heat pump, EV charger, or anything else with a power sensor. Three pills per row, so it fits in a narrow dashboard slot where a full energy-flow card is too big.
 
-![Slim Energy Card](https://raw.githubusercontent.com/koehntopp/ha-slimenergy/main/docs/card.png)
+<img src="https://raw.githubusercontent.com/koehntopp/ha-slimenergy/main/docs/card.png" alt="Slim Energy Card" width="50%">
 
 ## Features
 - One pill per device: icon, live power in kW, and optional values in brackets.
@@ -21,11 +21,11 @@ A compact Home Assistant Lovelace card that shows your energy flows in a few sma
 ## Configuration
 Use the visual editor, or YAML.
 
-![Editor](https://raw.githubusercontent.com/koehntopp/ha-slimenergy/main/docs/editor.png)
+<img src="https://raw.githubusercontent.com/koehntopp/ha-slimenergy/main/docs/editor.png" alt="Editor" width="50%">
 
 Each device has a type. The type sets the default icon and border colour, and decides which fields are offered (battery: state of charge entity, grid: price entity).
 
-![Editor, expanded device](https://raw.githubusercontent.com/koehntopp/ha-slimenergy/main/docs/editor-grid.png)
+<img src="https://raw.githubusercontent.com/koehntopp/ha-slimenergy/main/docs/editor-grid.png" alt="Editor, expanded device" width="50%">
 
 ```yaml
 type: custom:slim-energy-card
@@ -63,9 +63,6 @@ entities:
 | `threshold` | `0.005` | Below this many kW the border stays neutral |
 
 Border colours can be themed with the CSS variables `--slim-green` and `--slim-red`.
-
-## Development
-`python3 -m http.server 8765`, then open `http://localhost:8765/preview.html`. It runs the real card against mock entities and a mocked form component. `?only=card` and `?only=editor&open=2` give the views used for the screenshots.
 
 ## Licence
 MIT, see [LICENSE](LICENSE). Icons come from Home Assistant's built-in Material Design Icons.
