@@ -11,6 +11,7 @@
   ha-form { display: block; }
   ha-form label { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; font-size: 14px; }
   ha-form input[type=text], ha-form select { background: #16263d; color: inherit; border: 1px solid var(--divider-color); border-radius: 4px; padding: 2px 6px; width: 55%; }
+  .hlp { font-size: 12px; color: var(--secondary-text-color); margin: -2px 0 6px; }
   mwc-button { display: inline-block; cursor: pointer; color: #4aa3ff; padding: 6px 0; margin-right: 12px; }
   pre { font-size: 12px; color: var(--secondary-text-color); }
 </style>
@@ -52,6 +53,7 @@
         });
         l.append(i);
         this.append(l);
+        if (s.helper) { const m = document.createElement("div"); m.className = "hlp"; m.textContent = s.helper; this.append(m); }
       }
     }
   });

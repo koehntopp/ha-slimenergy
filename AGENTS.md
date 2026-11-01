@@ -11,6 +11,7 @@ HACS Lovelace card (`custom:slim-energy-card`). Goal: very simple, slim energy o
 ## Spec
 - Fields in a 3-column grid; one field per entry in `entities`, so 6 entities = 2 rows. Pill: border, icon, value, optional bracket text.
 - Value shown as absolute kW (W converted to kW); other units shown as-is. Missing/non-numeric state shows `n/a`.
+- Editor row header shows live signed value + effective border colour (`sumStates`, `borderColor` shared with the card); `positive_color` and `invert` have helper texts.
 - Border colour from sign: value > 0 uses `positive_color` (`green` default, or `red`), value < 0 the opposite. `invert: true` flips the sign first. `abs(kW) <= threshold` (default 0.005) = neutral border.
 - Bracket text, parts joined with ` · `, in order: battery SoC (`soc_entity`, `52%`), daily energy (`daily_entity`, kWh, Wh converted, 1 decimal), grid price (only `type: grid`, from its `price_entity`, 2 decimals + its unit).
   - Solar: `daily_entity` = daily production. Grid: `daily_entity` = daily use, e.g. `(4.2 kWh · 0.28 €/kWh)`.

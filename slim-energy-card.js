@@ -10,6 +10,28 @@ const TYPES = {
   other: { label: "Other", icon: "mdi:flash", color: "green" },
 };
 
+// sum of the numeric states of ids; W -> kW (or Wh -> kWh when wh); returns [total, unit]
+const sumStates = (hass, ids, wh) => {
+  let t = NaN, u = "";
+  for (const id of ids) {
+    const s = id && hass.states[id];
+    const n = s ? parseFloat(s.state) : NaN;
+    if (isNaN(n)) continue;
+    const un = s.attributes.unit_of_measurement || "";
+    const small = un === (wh ? "Wh" : "W");
+    u = small ? (wh ? "kWh" : "kW") : un;
+    t = (isNaN(t) ? 0 : t) + (small ? n / 1000 : n);
+  }
+  return [t, u];
+};
+
+// border colour for a device value: positive_color (type default) when value > 0 (flipped by invert), the opposite below 0, "" near 0
+const borderColor = (c, kw) => {
+  if (!(Math.abs(kw) > (c.threshold ?? 0.005))) return "";
+  const pos = (c.positive_color || (TYPES[c.type] || TYPES.other).color) === "red" ? "red" : "green";
+  return (kw > 0) === !c.invert ? pos : pos === "red" ? "green" : "red";
+};
+
 class SlimEnergyCard extends HTMLElement {
   setConfig(config) {
     if (!Array.isArray(config.entities) || !config.entities.length) {
@@ -62,19 +84,8 @@ class SlimEnergyCard extends HTMLElement {
     return [n, s];
   }
 
-  // sum of the numeric states of ids; W -> kW (or Wh -> kWh when wh); returns [total, unit]
   _sum(ids, wh) {
-    let t = NaN, u = "";
-    for (const id of ids) {
-      if (!id) continue;
-      const [n, s] = this._num(id);
-      if (isNaN(n)) continue;
-      const un = s.attributes.unit_of_measurement || "";
-      const small = un === (wh ? "Wh" : "W");
-      u = small ? (wh ? "kWh" : "kW") : un;
-      t = (isNaN(t) ? 0 : t) + (small ? n / 1000 : n);
-    }
-    return [t, u];
+    return sumStates(this._hass, ids, wh);
   }
 
   _field(c) {
@@ -83,12 +94,7 @@ class SlimEnergyCard extends HTMLElement {
     let val = "n/a", color = "";
     if (!isNaN(kw)) {
       val = `${Math.abs(kw).toFixed(c.decimals ?? 2)} ${unit}`;
-      if (Math.abs(kw) > (c.threshold ?? 0.005)) {
-        // positive_color: colour shown when value > 0 (default green)
-        const pos = (c.positive_color || T.color) === "red" ? "red" : "green";
-        const neg = pos === "red" ? "green" : "red";
-        color = (kw > 0) === (!c.invert) ? pos : neg;
-      }
+      color = borderColor(c, kw);
     }
     const parts = [];
     if (c.soc_entity) {
@@ -152,8 +158,10 @@ const schemaFor = (type) => [
   ...(type === "grid" ? [{ name: "price_entity", selector: ent() }] : []),
   { name: "daily_entity", selector: ent({ device_class: "energy" }) },
   ...(type === "solar" ? [{ name: "daily_entity_2", selector: ent({ device_class: "energy" }) }] : []),
-  { name: "positive_color", selector: sel([{ value: "green", label: "Green" }, { value: "red", label: "Red" }]) },
-  { name: "invert", selector: bool },
+  { name: "positive_color", selector: sel([{ value: "green", label: "Green" }, { value: "red", label: "Red" }]),
+    helper: "Border colour while the value is above 0; below 0 the opposite colour is used. The live value and resulting colour show in the row header." },
+  { name: "invert", selector: bool,
+    helper: "Flip the sign first, for a sensor that reports the opposite direction (e.g. discharging as positive). Check the live value in the row header." },
 ];
 const MANAGED = ["enabled", "type", "name", "entity", "entity_2", "icon", "soc_entity", "soc_fill", "price_entity", "daily_entity", "daily_entity_2", "positive_color", "invert"];
 
@@ -171,6 +179,7 @@ class SlimEnergyCardEditor extends HTMLElement {
   set hass(hass) {
     this._hass = hass;
     this.querySelectorAll("ha-form").forEach((f) => (f.hass = hass));
+    this.querySelectorAll("summary").forEach((sum, i) => this._config?.entities[i] && this._head(sum, this._config.entities[i]));
   }
 
   _emit(entities, extra = {}) {
@@ -184,6 +193,7 @@ class SlimEnergyCardEditor extends HTMLElement {
     f.schema = schema;
     f.data = data;
     f.computeLabel = (s) => LABELS[s.name] || s.name;
+    f.computeHelper = (s) => s.helper || "";
     f.addEventListener("value-changed", (e) => {
       e.stopPropagation();
       f.data = e.detail.value; // ha-form merges edits into its data prop
@@ -199,6 +209,14 @@ class SlimEnergyCardEditor extends HTMLElement {
     sum.querySelector(".nm").textContent = (e.enabled === false ? "(off) " : "") + (e.name || T.label);
     sum.querySelector(".id").textContent = e.entity || "";
     sum.querySelector(".warn").textContent = e.entity ? "" : "⚠ no entity";
+    // live value and the border colour it currently gets, so direction / invert are easy to judge
+    const cur = sum.querySelector(".cur");
+    const [kw, unit] = this._hass && e.entity ? sumStates(this._hass, [e.entity, e.entity_2]) : [NaN, ""];
+    if (isNaN(kw)) cur.textContent = "";
+    else {
+      const col = borderColor(e, kw);
+      cur.innerHTML = `${kw < 0 ? "−" : "+"}${Math.abs(kw).toFixed(2)} ${unit} <span style="color:var(--slim-${col || "x"}, ${col === "red" ? "#e57373" : col === "green" ? "#4caf50" : "gray"})">● ${col || "neutral"}</span>`;
+    }
   }
 
   _move(from, to) {
@@ -217,7 +235,7 @@ class SlimEnergyCardEditor extends HTMLElement {
       summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; padding: 10px 0; }
       summary::-webkit-details-marker { display: none; }
       .h { cursor: grab; } .nm { font-weight: 600; } .warn { color: var(--warning-color, #ffa600); }
-      .id { flex: 1; min-width: 0; color: var(--secondary-text-color); font-size: .8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .cur { font-size: .8em; white-space: nowrap; } .id { flex: 1; min-width: 0; color: var(--secondary-text-color); font-size: .8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .btn { cursor: pointer; --mdc-icon-size: 20px; }
       .add { display: inline-block; cursor: pointer; color: var(--primary-color); padding: 8px 0; }
     </style>`;
@@ -228,7 +246,7 @@ class SlimEnergyCardEditor extends HTMLElement {
       d.open = this._open.has(key) || !e.entity;
       d.addEventListener("toggle", () => (d.open ? this._open.add(key) : this._open.delete(key)));
       const sum = document.createElement("summary");
-      sum.innerHTML = `<ha-icon class="h" icon="mdi:drag"></ha-icon><span class="ic"></span><span class="nm"></span><span class="id"></span><span class="warn"></span>
+      sum.innerHTML = `<ha-icon class="h" icon="mdi:drag"></ha-icon><span class="ic"></span><span class="nm"></span><span class="id"></span><span class="cur"></span><span class="warn"></span>
         <ha-icon class="btn cp" icon="mdi:content-copy"></ha-icon><ha-icon class="btn rm" icon="mdi:close"></ha-icon>`;
       this._head(sum, e);
       const act = (cls, fn) => sum.querySelector(cls).addEventListener("click", (ev) => { ev.preventDefault(); ev.stopPropagation(); fn(); });

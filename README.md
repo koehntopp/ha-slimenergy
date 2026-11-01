@@ -49,6 +49,14 @@ entities:
     enabled: false                     # hide this device
 ```
 
+### Border colour logic
+The border shows the direction of the energy, not whether it is "good":
+- The pill shows the absolute value. The sign decides the colour.
+- Value above 0: the device's `positive_color` (green or red). Value below 0: the other colour. Close to 0 (under `threshold`): neutral.
+- `invert: true` flips the sign before this, for sensors that report the opposite direction.
+- Defaults assume the usual sign: solar, home: positive is green. Battery: charging (positive) is red. Grid: import (positive) is red, export green. Heat pump, EV: positive is red.
+- In the editor, each row header shows the live value and the colour it gets right now, e.g. `+0.13 kW ● red`, so you can check a setting immediately.
+
 ### Device options
 | Option | Default | Description |
 |---|---|---|
