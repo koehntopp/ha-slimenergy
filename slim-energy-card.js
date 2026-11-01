@@ -106,7 +106,7 @@ class SlimEnergyCard extends HTMLElement {
     const [d, du] = this._sum([c.daily_entity, c.daily_entity_2], true);
     let line2 = "";
     if (!isNaN(d)) {
-      const t = `${d.toFixed(1)} ${du}`.trim();
+      const t = `${d.toFixed(1)} ${du || "kWh"}`;
       if (c.daily_line) line2 = `<span class="x">${t}</span>`;
       else parts.push(t);
     }
