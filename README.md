@@ -36,6 +36,7 @@ entities:
   - type: battery
     entity: sensor.battery_power
     soc_entity: sensor.battery_soc     # shows (52%)
+    soc_fill: true                     # optional: pill filled red->green by SoC
   - type: grid
     entity: sensor.grid_power
     price_entity: sensor.grid_price    # grid only; bracket: (4.2 kWh · 0.28 €/kWh)
@@ -54,6 +55,7 @@ entities:
 | `name` | type name | Tooltip and editor label |
 | `icon` | per type | Any `mdi:...` icon or an emoji. Defaults: solar `mdi:white-balance-sunny`, battery `mdi:battery-charging-medium`, grid `mdi:transmission-tower`, home `mdi:home`, heat pump `mdi:heat-pump`, EV `mdi:car-electric`, other `mdi:flash` |
 | `soc_entity` | | Battery only: state of charge, shown as `(52%)` |
+| `soc_fill` | `false` | Battery only: fill the pill from the left up to the state of charge, with a red to green gradient |
 | `price_entity` | | Grid only: price, shown in brackets |
 | `daily_entity` | | Daily energy sensor in kWh or Wh, shown in brackets |
 | `positive_color` | per type | Border colour when the value is above 0: `green` or `red`. Solar, home, other: green. Battery, grid, heat pump, EV: red. The opposite colour is used below 0. |

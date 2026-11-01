@@ -93,8 +93,17 @@ class SlimEnergyCard extends HTMLElement {
     }
     const extra = parts.length ? `(${parts.join(" · ")})` : "";
     const icon = c.icon || T.icon;
+    let style = "";
+    if (c.soc_fill && c.soc_entity) {
+      // pill filled left to right up to the SoC, gradient red -> hue of the current level (0 red, 120 green)
+      const [soc] = this._num(c.soc_entity);
+      if (!isNaN(soc)) {
+        const p = Math.max(0, Math.min(100, soc));
+        style = ` style="background:linear-gradient(90deg,hsla(0,70%,45%,.55),hsla(${p * 1.2},70%,45%,.55)) no-repeat left/${p}% 100%,var(--card-background-color)"`;
+      }
+    }
     const ic = `<span class="ic">${iconHtml(icon)}</span>`;
-    return `<div class="f ${color}" data-e="${c.entity}" title="${(c.name || "").replace(/"/g, "&quot;")}">${ic}<span class="v">${val}</span><span class="x">${extra}</span></div>`;
+    return `<div class="f ${color}" data-e="${c.entity}"${style} title="${(c.name || "").replace(/"/g, "&quot;")}">${ic}<span class="v">${val}</span><span class="x">${extra}</span></div>`;
   }
 
   _render() {
@@ -116,7 +125,7 @@ const sel = (options) => ({ select: { options, mode: "dropdown" } });
 const TYPE_OPTIONS = Object.entries(TYPES).map(([value, t]) => ({ value, label: t.label }));
 const LABELS = {
   enabled: "Show", type: "Type", name: "Name", entity: "Power entity", icon: "Icon",
-  soc_entity: "Battery SoC entity", daily_entity: "Daily energy entity",
+  soc_entity: "Battery SoC entity", soc_fill: "Fill pill by state of charge", daily_entity: "Daily energy entity",
   positive_color: "Border colour when value > 0", invert: "Invert sign", price_entity: "Price entity",
 };
 const bool = { boolean: {} };
@@ -127,13 +136,13 @@ const schemaFor = (type) => [
   { name: "name", selector: { text: {} } },
   { name: "entity", selector: ent() },
   { name: "icon", selector: { icon: { placeholder: TYPES[type].icon } } }, // standard icon shown as placeholder
-  ...(type === "battery" ? [{ name: "soc_entity", selector: ent({ device_class: "battery" }) }] : []),
+  ...(type === "battery" ? [{ name: "soc_entity", selector: ent({ device_class: "battery" }) }, { name: "soc_fill", selector: bool }] : []),
   ...(type === "grid" ? [{ name: "price_entity", selector: ent() }] : []),
   { name: "daily_entity", selector: ent({ device_class: "energy" }) },
   { name: "positive_color", selector: sel([{ value: "green", label: "Green" }, { value: "red", label: "Red" }]) },
   { name: "invert", selector: bool },
 ];
-const MANAGED = ["enabled", "type", "name", "entity", "icon", "soc_entity", "price_entity", "daily_entity", "positive_color", "invert"];
+const MANAGED = ["enabled", "type", "name", "entity", "icon", "soc_entity", "soc_fill", "price_entity", "daily_entity", "positive_color", "invert"];
 
 class SlimEnergyCardEditor extends HTMLElement {
   _nk = 0;
@@ -243,6 +252,7 @@ class SlimEnergyCardEditor extends HTMLElement {
         const dflt = v.type !== type && v.positive_color === TYPES[type].color ? TYPES[v.type].color : v.positive_color;
         if (dflt && dflt !== TYPES[v.type].color) n.positive_color = dflt;
         if (v.invert) n.invert = true;
+        if (v.type === "battery" && v.soc_fill) n.soc_fill = true;
         if (!v.enabled) n.enabled = false;
         entities[i] = { ...kept, ...n };
         this._emit(entities);
