@@ -60,7 +60,7 @@
 <script>
   const st = (state, unit) => ({ state: String(state), attributes: { unit_of_measurement: unit } });
   const hass = { states: {
-    "sensor.solar": st(6930, "W"), "sensor.solar_day": st(31.4, "kWh"),
+    "sensor.solar": st(4930, "W"), "sensor.solar_day": st(21.4, "kWh"), "sensor.solar2": st(2.0, "kW"), "sensor.solar2_day": st(10, "kWh"),
     "sensor.bat": st(130, "W"), "sensor.soc": st(52, "%"),
     "sensor.grid": st(-0.01, "kW"), "sensor.grid_day": st(4.2, "kWh"), "sensor.price": st(0.28, "€/kWh"),
     "sensor.house": st(6.09, "kW"), "sensor.house_day": st(28.7, "kWh"),
@@ -72,7 +72,7 @@
   const show = (c) => (document.getElementById("yaml").textContent = JSON.stringify(c, null, 1));
   const config = {
     entities: [
-      { entity: "sensor.solar", type: "solar", daily_entity: "sensor.solar_day" },
+      { entity: "sensor.solar", type: "solar", entity_2: "sensor.solar2", daily_entity: "sensor.solar_day", daily_entity_2: "sensor.solar2_day" },
       { entity: "sensor.bat", type: "battery", soc_entity: "sensor.soc", soc_fill: true },
       { entity: "sensor.grid", type: "grid", price_entity: "sensor.price", daily_entity: "sensor.grid_day" },
       { entity: "sensor.house", type: "home", name: "House", daily_entity: "sensor.house_day" },

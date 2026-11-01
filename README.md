@@ -32,7 +32,9 @@ type: custom:slim-energy-card
 entities:
   - type: solar                        # solar|battery|grid|home|heatpump|ev|other
     entity: sensor.solar_power
+    entity_2: sensor.solar2_power      # optional second inverter, summed
     daily_entity: sensor.solar_energy_today   # kWh, shown in brackets
+    daily_entity_2: sensor.solar2_energy_today
   - type: battery
     entity: sensor.battery_power
     soc_entity: sensor.battery_soc     # shows (52%)
@@ -52,10 +54,12 @@ entities:
 |---|---|---|
 | `type` | `other` | `solar`, `battery`, `grid`, `home`, `heatpump`, `ev`, `other` |
 | `entity` | required | Power sensor (W or kW). Shown as absolute kW. |
+| `entity_2` | | Solar only: optional second power sensor (second inverter), added to `entity` |
 | `name` | type name | Tooltip and editor label |
 | `icon` | per type | Any `mdi:...` icon or an emoji. Defaults: solar `mdi:white-balance-sunny`, battery `mdi:battery-charging-medium`, grid `mdi:transmission-tower`, home `mdi:home`, heat pump `mdi:heat-pump`, EV `mdi:car-electric`, other `mdi:flash` |
 | `soc_entity` | | Battery only: state of charge, shown as `(52%)` |
 | `soc_fill` | `false` | Battery only: fill the pill from the left up to the state of charge, with a red to green gradient |
+| `daily_entity_2` | | Solar only: second daily energy sensor, added to `daily_entity` |
 | `price_entity` | | Grid only: price, shown in brackets |
 | `daily_entity` | | Daily energy sensor in kWh or Wh, shown in brackets |
 | `positive_color` | per type | Border colour when the value is above 0: `green` or `red`. Solar, home, other: green. Battery, grid, heat pump, EV: red. The opposite colour is used below 0. |
