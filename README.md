@@ -2,7 +2,7 @@
 
 A compact Home Assistant Lovelace card that shows your energy flows in a few small pills: solar, battery, grid, home, heat pump, EV charger, or anything else with a power sensor. Three pills per row, so it fits in a narrow dashboard slot where a full energy-flow card is too big.
 
-![Slim Energy Card](docs/card.png)
+![Slim Energy Card](https://raw.githubusercontent.com/koehntopp/ha-slimenergy/main/docs/card.png)
 
 ## Features
 - One pill per device: icon, live power in kW, and optional values in brackets.
@@ -21,11 +21,11 @@ A compact Home Assistant Lovelace card that shows your energy flows in a few sma
 ## Configuration
 Use the visual editor, or YAML.
 
-![Editor](docs/editor.png)
+![Editor](https://raw.githubusercontent.com/koehntopp/ha-slimenergy/main/docs/editor.png)
 
 Each device has a type. The type sets the default icon and border colour, and decides which fields are offered (battery: state of charge entity, grid: price entity).
 
-![Editor, expanded device](docs/editor-grid.png)
+![Editor, expanded device](https://raw.githubusercontent.com/koehntopp/ha-slimenergy/main/docs/editor-grid.png)
 
 ```yaml
 type: custom:slim-energy-card

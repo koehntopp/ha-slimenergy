@@ -27,6 +27,7 @@ Entity: `type` (solar|battery|grid|home|heatpump|ev|other), `name` (tooltip/edit
 ## Not included (add only on request)
 Status words ("Producing", "Using"), visual editor, translations, per-field click actions, auto sizing to content.
 
+- README images must use absolute `raw.githubusercontent.com/.../main/docs/X.png` URLs: HACS renders the README inside HA, where relative paths break.
 - Screenshots in `docs/` (README) are made headless from `preview.html` (`?only=card`, `?only=editor&open=2`): `Google Chrome --headless=new --force-device-scale-factor=2 --window-size=W,H --screenshot=docs/X.png URL`. Regenerate when card or editor look changes. Editor shots use the mocked `ha-form`, not real HA widgets.
 
 ## Workflow
