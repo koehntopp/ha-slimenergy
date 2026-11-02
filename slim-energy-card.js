@@ -117,11 +117,12 @@ class SlimEnergyCard extends HTMLElement {
     const icon = c.icon || typeIcon(T);
     let style = "";
     if (c.soc_fill && c.soc_entity) {
-      // pill filled left to right up to the SoC, gradient red -> hue of the current level (0 red, 120 green)
+      // pill filled left to right up to the SoC, gradient red -> green; full green is reached at 60% SoC (hue 0 red, 120 green)
       const [soc] = this._num(c.soc_entity);
       if (!isNaN(soc)) {
         const p = Math.max(0, Math.min(100, soc));
-        style = ` style="background:linear-gradient(90deg,hsla(0,70%,45%,.55),hsla(${p * 1.2},70%,45%,.55)) no-repeat left/${p}% 100%,var(--card-background-color)"`;
+        const hue = Math.min(120, p * 2), stop = p < 60 ? 100 : 6000 / p; // stop: where green is reached, in % of the fill
+        style = ` style="background:linear-gradient(90deg,hsla(0,70%,45%,.55),hsla(${hue},70%,45%,.55) ${stop}%) no-repeat left/${p}% 100%,var(--card-background-color)"`;
       }
     }
     const ic = `<span class="ic">${iconHtml(icon)}</span>`;
