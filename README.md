@@ -69,6 +69,7 @@ The border shows the direction of the energy, not whether it is "good":
 | `soc_fill` | `false` | Battery only: fill the pill from the left up to the state of charge, with a red to green gradient |
 | `daily_entity_2` | | Solar only: second daily energy sensor, added to `daily_entity` |
 | `daily_line` | `false` | Show SoC, daily energy and price on a second line in the pill (SoC plain, daily and price in brackets) instead of next to the value |
+| `color_value` | `false` | Colour the power value green or red like the border |
 | `price_entity` | | Grid only: price, shown in brackets |
 | `daily_entity` | | Daily energy sensor in kWh or Wh, shown in brackets |
 | `positive_color` | per type | Border colour when the value is above 0: `green` or `red`. Solar, home, other: green. Battery, grid, heat pump, EV: red. The opposite colour is used below 0. |

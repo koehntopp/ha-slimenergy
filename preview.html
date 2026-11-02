@@ -74,11 +74,11 @@
   const show = (c) => (document.getElementById("yaml").textContent = JSON.stringify(c, null, 1));
   const config = {
     entities: [
-      { entity: "sensor.solar", type: "solar", entity_2: "sensor.solar2", daily_entity: "sensor.solar_day", daily_entity_2: "sensor.solar2_day", daily_line: true },
+      { entity: "sensor.solar", type: "solar", color_value: true, entity_2: "sensor.solar2", daily_entity: "sensor.solar_day", daily_entity_2: "sensor.solar2_day", daily_line: true },
       { entity: "sensor.bat", type: "battery", soc_entity: "sensor.soc", soc_fill: true, daily_line: true, daily_entity: "sensor.bat_day" },
       { entity: "sensor.grid", type: "grid", price_entity: "sensor.price", daily_entity: "sensor.grid_day" },
       { entity: "sensor.house", type: "home", name: "House", daily_entity: "sensor.house_day" },
-      { entity: "sensor.heat", type: "heatpump", daily_entity: "sensor.heat_day" },
+      { entity: "sensor.heat", type: "heatpump", color_value: true, daily_entity: "sensor.heat_day" },
       { entity: "sensor.car", type: "ev", enabled: false },
     ],
   };

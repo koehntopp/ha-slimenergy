@@ -51,6 +51,8 @@ class SlimEnergyCard extends HTMLElement {
           .f.red { border-color: var(--slim-red, #e57373); }
           .ic { display: flex; --mdc-icon-size: 20px; font-size: 18px; flex: none; }
           .v { font-weight: 600; }
+          .cv.green .v { color: var(--slim-green, #4caf50); }
+          .cv.red .v { color: var(--slim-red, #e57373); }
           .x { color: var(--secondary-text-color); font-size: .85em; overflow: hidden; text-overflow: ellipsis; }
           .t { display: flex; flex-direction: column; min-width: 0; }
           .r { display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -129,7 +131,7 @@ class SlimEnergyCard extends HTMLElement {
       }
     }
     const ic = `<span class="ic">${iconHtml(icon)}</span>`;
-    return `<div class="f ${color}" data-e="${c.entity}"${style} title="${(c.name || "").replace(/"/g, "&quot;")}">${ic}<div class="t"><div class="r"><span class="v">${val}</span><span class="x">${extra}</span></div>${line2}</div></div>`;
+    return `<div class="f ${color}${c.color_value ? " cv" : ""}" data-e="${c.entity}"${style} title="${(c.name || "").replace(/"/g, "&quot;")}">${ic}<div class="t"><div class="r"><span class="v">${val}</span><span class="x">${extra}</span></div>${line2}</div></div>`;
   }
 
   _render() {
@@ -151,7 +153,7 @@ const sel = (options) => ({ select: { options, mode: "dropdown" } });
 const TYPE_OPTIONS = Object.entries(TYPES).map(([value, t]) => ({ value, label: t.label }));
 const LABELS = {
   enabled: "Show", type: "Type", name: "Name", entity: "Power entity", icon: "Icon",
-  entity_2: "Second power entity (optional, added)", daily_entity_2: "Second daily energy entity (optional, added)", soc_entity: "Battery SoC entity", soc_fill: "Fill pill by state of charge", daily_entity: "Daily energy entity", daily_line: "Details on second line",
+  entity_2: "Second power entity (optional, added)", daily_entity_2: "Second daily energy entity (optional, added)", soc_entity: "Battery SoC entity", soc_fill: "Fill pill by state of charge", daily_entity: "Daily energy entity", daily_line: "Details on second line", color_value: "Colour the value like the border",
   positive_color: "Border colour when value > 0", invert: "Invert sign", price_entity: "Price entity",
 };
 const bool = { boolean: {} };
@@ -167,13 +169,14 @@ const schemaFor = (type) => [
   ...(type === "grid" ? [{ name: "price_entity", selector: ent() }] : []),
   { name: "daily_entity", selector: ent({ device_class: "energy" }) },
   { name: "daily_line", selector: bool },
+  { name: "color_value", selector: bool },
   ...(type === "solar" ? [{ name: "daily_entity_2", selector: ent({ device_class: "energy" }) }] : []),
   { name: "positive_color", selector: sel([{ value: "green", label: "Green" }, { value: "red", label: "Red" }]),
     helper: "Border colour while the value is above 0; below 0 the opposite colour is used. The live value and resulting colour show in the row header." },
   { name: "invert", selector: bool,
     helper: "Flip the sign first, for a sensor that reports the opposite direction (e.g. discharging as positive). Check the live value in the row header." },
 ];
-const MANAGED = ["enabled", "type", "name", "entity", "entity_2", "icon", "soc_entity", "soc_fill", "price_entity", "daily_entity", "daily_entity_2", "daily_line", "positive_color", "invert"];
+const MANAGED = ["enabled", "type", "name", "entity", "entity_2", "icon", "soc_entity", "soc_fill", "price_entity", "daily_entity", "daily_entity_2", "daily_line", "color_value", "positive_color", "invert"];
 
 class SlimEnergyCardEditor extends HTMLElement {
   _nk = 0;
@@ -294,6 +297,7 @@ class SlimEnergyCardEditor extends HTMLElement {
         if (dflt && dflt !== TYPES[v.type].color) n.positive_color = dflt;
         if (v.invert) n.invert = true;
         if (v.daily_line) n.daily_line = true;
+        if (v.color_value) n.color_value = true;
         if (v.type === "battery" && v.soc_fill) n.soc_fill = true;
         if (!v.enabled) n.enabled = false;
         entities[i] = { ...kept, ...n };
