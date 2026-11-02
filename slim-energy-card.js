@@ -100,9 +100,10 @@ class SlimEnergyCard extends HTMLElement {
       color = borderColor(c, kw);
     }
     const parts = [];
+    let socText = "";
     if (c.soc_entity) {
       const [soc] = this._num(c.soc_entity);
-      if (!isNaN(soc)) parts.push(`${Math.round(soc)}%`);
+      if (!isNaN(soc)) socText = `${Math.round(soc)}%`;
     }
     const [d, du] = this._sum([c.daily_entity, c.daily_entity_2], true);
     if (!isNaN(d)) parts.push(`${d.toFixed(1)} ${du || "kWh"}`);
@@ -111,9 +112,11 @@ class SlimEnergyCard extends HTMLElement {
       const [p, ps] = this._num(price);
       if (!isNaN(p)) parts.push(`${p.toFixed(2)} ${ps.attributes.unit_of_measurement || ""}`.trim());
     }
-    const text = parts.join(" · ");
-    const extra = text && !c.daily_line ? `(${text})` : "";
-    const line2 = text && c.daily_line ? `<span class="x">${text}</span>` : ""; // daily_line: all bracket parts on a second line
+    // daily_line: second line, SoC plain, daily/price in brackets; else everything in one bracket
+    const rest = parts.join(" · ");
+    const extra = c.daily_line ? "" : [socText, rest].filter(Boolean).join(" · ").replace(/^(.+)$/, "($1)");
+    const l2 = [socText, rest && `(${rest})`].filter(Boolean).join(" ");
+    const line2 = c.daily_line && l2 ? `<span class="x">${l2}</span>` : "";
     const icon = c.icon || typeIcon(T);
     let style = "";
     if (c.soc_fill && c.soc_entity) {
