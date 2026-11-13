@@ -35,6 +35,7 @@ entities:
     entity_2: sensor.solar2_power      # optional second inverter, summed
     daily_entity: sensor.solar_energy_today   # kWh, shown in brackets
     daily_entity_2: sensor.solar2_energy_today
+    peak_kw: 10                        # optional: pill fills green up to output / peak
   - type: battery
     entity: sensor.battery_power
     soc_entity: sensor.battery_soc     # shows (52%)
@@ -70,6 +71,7 @@ The border shows the direction of the energy, not whether it is "good":
 | `daily_entity_2` | | Solar only: second daily energy sensor, added to `daily_entity` |
 | `daily_line` | `false` | Show SoC, daily energy and price on a second line in the pill (SoC plain, daily and price in brackets) instead of next to the value |
 | `color_value` | `false` | Colour the power value green or red like the border |
+| `peak_kw` | | Solar only: peak capacity in kW (sum of both inverters). The pill is filled green from the left up to the current output as a share of it |
 | `price_entity` | | Grid only: price, shown in brackets |
 | `daily_entity` | | Daily energy sensor in kWh or Wh, shown in brackets |
 | `positive_color` | per type | Border colour when the value is above 0: `green` or `red`. Solar, home, other: green. Battery, grid, heat pump, EV: red. The opposite colour is used below 0. |

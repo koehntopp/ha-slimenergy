@@ -18,6 +18,7 @@ HACS Lovelace card (`custom:slim-energy-card`). Goal: very simple, slim energy o
 - Daily value without a unit (e.g. a meter on a unit-less source) is shown as kWh.
 - `daily_line: true`: bracket parts go on a second line instead of next to the value: SoC plain, daily/price in brackets (`52% (6.1 kWh)`); saves width. Key name kept from when it only moved the daily value.
 - `color_value: true`: the power value text gets the border colour (green/red; neutral stays default).
+- Solar `peak_kw` (kW, >0): pill filled green left to right up to |output| / peak_kw (capped 100%). Needs the sum in kW (W is converted). Off when unset.
 - Battery `soc_fill: true` (needs `soc_entity`): pill background filled left to right to SoC%, gradient red to green, hue = min(120, SoC*2), so full green from 60% SoC. Off by default.
 - Solar only: `entity_2` and `daily_entity_2` (second inverter) are summed with `entity` / `daily_entity` (`_sum`, W to kW, Wh to kWh; unavailable ones skipped). Tap opens more-info of `entity`.
 - Icon per entity: any `mdi:...` (via `ha-icon`) or emoji. Defaults per type are standard MDI icons (`TYPES`): sun `mdi:white-balance-sunny`, battery `mdi:battery-charging-medium`, grid `mdi:transmission-tower`, home `mdi:home`, heat pump `bha:heat-pump` (from hulkhaugen/hass-bha-icons, used only when `window.customIconsets.bha` exists, else `mdi:heat-pump`; `typeIcon`), EV `mdi:car-electric`, other `mdi:flash`. Chosen to match what the owner had configured by hand; no coloured/embedded icons (rejected). Editor icon picker shows the type default as placeholder.
@@ -28,7 +29,7 @@ HACS Lovelace card (`custom:slim-energy-card`). Goal: very simple, slim energy o
 
 ## Config
 Card: `entities` (required). Legacy card-level `price_entity` still read as fallback.
-Entity: `type` (solar|battery|grid|home|heatpump|ev|other), `name` (tooltip/editor label), `enabled` (false = hidden), `entity`, `icon`, `soc_entity` (battery), `soc_fill` (battery), `price_entity` (grid), `daily_entity`, `daily_line`, `color_value`, `positive_color`, `invert`, `decimals` (2), `threshold` (0.005).
+Entity: `type` (solar|battery|grid|home|heatpump|ev|other), `name` (tooltip/editor label), `enabled` (false = hidden), `entity`, `icon`, `soc_entity` (battery), `soc_fill` (battery), `peak_kw` (solar), `price_entity` (grid), `daily_entity`, `daily_line`, `color_value`, `positive_color`, `invert`, `decimals` (2), `threshold` (0.005).
 
 ## Not included (add only on request)
 Status words ("Producing", "Using"), visual editor, translations, per-field click actions, auto sizing to content.
